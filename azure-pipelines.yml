@@ -1,0 +1,184 @@
+
+trigger:
+  branches:
+    include:
+#     - '*'
+      - development
+
+pr:
+  branches:
+    include:
+      - '*'
+      - development
+
+variables:
+  buildConfiguration: 'Release'
+  dotnetSdkVersion: '9.0.x'
+  resourceGroupName: 'saral'
+  environmentName: 'development'
+  azureServiceConnection: 'default-service-connection'
+  webAppName: 'saral-backend-app'
+  # Optional: set to 'true' to provision/update infra (Bicep) before app deploy
+  deployInfra: 'true'
+  azureLocation: 'eastus'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: ProvisionInfra
+  displayName: 'provision infrastructure'
+  dependsOn: []
+  condition: and(succeeded(), eq(variables['deployInfra'], 'true'))
+  jobs:
+  - job: Provision
+    displayName: 'Azure Deployment (subscription scope)'
+    steps:
+    - task: AzureCLI@2
+      displayName: 'What-if infra/main.bicep'
+      inputs:
+        azureSubscription: '$(azureServiceConnection)'
+        scriptType: bash
+        scriptLocation: inlineScript
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+        inlineScript: |
+          set -euxo pipefail
+          az --version
+          az deployment sub what-if \
+            --location "$(azureLocation)" \
+            --template-file infra/main.bicep
+    - task: AzureCLI@2
+      displayName: 'deploy infra/main.bicep'
+      inputs:
+        azureSubscription: '$(azureServiceConnection)'
+        scriptType: bash
+        scriptLocation: inlineScript
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+        inlineScript: |
+          set -euxo pipefail
+          az deployment sub create \
+            --name "saral-$(Build.BuildId)" \
+            --location "$(azureLocation)" \
+            --template-file infra/main.bicep
+- stage: Build
+  displayName: '🏗️ Build & Test'
+  condition: false
+  jobs:
+  - job: Build
+    displayName: '📦 Build Job'
+    steps:
+    - task: Bash@3
+      displayName: '🔎 Diagnostics: print key variables & context'
+      inputs:
+        targetType: inline
+        script: |
+          echo "Build.Reason: $(Build.Reason)"
+          echo "Build.SourceBranch: $(Build.SourceBranch)"
+          echo "System.PullRequest.TargetBranch: $(System.PullRequest.TargetBranch)"
+          echo "deployInfra: $(deployInfra)"
+          echo "azureLocation: $(azureLocation)"
+          echo "resourceGroupName: $(resourceGroupName)"
+          echo "webAppName: $(webAppName)"
+    - task: UseDotNet@2
+      displayName: '🛠️ Install .NET SDK $(dotnetSdkVersion)'
+      inputs:
+        packageType: 'sdk'
+        version: $(dotnetSdkVersion)
+
+    - task: DotNetCoreCLI@2
+      displayName: '📥 Restore NuGet Packages'
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
+
+    - task: DotNetCoreCLI@2
+      displayName: '⚙️ Build Application'
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --no-restore'
+
+    - task: DotNetCoreCLI@2
+      displayName: '🧪 Run Unit Tests with Coverage'
+      inputs:
+        command: 'test'
+        projects: 'tests/**/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --no-build --collect:"XPlat Code Coverage"'
+
+    - task: DotNetCoreCLI@2
+      displayName: '📤 Publish for Linux'
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: 'src/Web.Api/Web.Api.csproj'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/app --runtime linux-x64 --self-contained false'
+
+    - task: ArchiveFiles@2
+      displayName: '📦 Package Published Output (ZIP)'
+      inputs:
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/app'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: '$(Build.ArtifactStagingDirectory)/web-app.zip'
+        replaceExistingArchive: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: '⬆️ Publish Application Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/web-app.zip'
+        ArtifactName: 'web-app'
+        publishLocation: 'Container'
+- stage: Deploy
+  displayName: '🚀 Deploy to Azure'
+  condition: false
+  dependsOn:
+    - Build
+  jobs:
+  - deployment: Deploy
+    displayName: '🌍 Deploy Job'
+    environment: '$(environmentName)'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: '📥 Download Build Artifacts'
+            inputs:
+              buildType: 'current'
+              artifactName: 'web-app'
+              targetPath: '$(System.ArtifactsDirectory)'
+
+          - task: AzureWebApp@1
+            displayName: 'Deploy to Azure Web App'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              appType: 'webAppLinux'
+              appName: '$(webAppName)'
+              package: '$(System.ArtifactsDirectory)/web-app.zip'
+
+          - task: AzureCLI@2
+            displayName: 'Set ASPNETCORE_ENVIRONMENT to Development'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: bash
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az webapp config appsettings set \
+                  --resource-group $(resourceGroupName) \
+                  --name $(webAppName) \
+                  --settings ASPNETCORE_ENVIRONMENT=Development
+
+          - task: AzureCLI@2
+            displayName: '🔄 Restart Azure WebApp'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: bash
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                echo "🔄 Restarting WebApp: $(webAppName)"
+                az webapp restart \
+                  --resource-group $(resourceGroupName) \
+                  --name $(webAppName)
+                echo "✅ Restart Triggered for $(webAppName)"
+                  --name $(webAppName)
+                echo "✅ Restart Triggered for $(webAppName)"

@@ -1,0 +1,74 @@
+### User Management Endpoint Integration Tests
+### Base URL and Global Configuration
+@baseUrl = https://localhost:5001
+
+### 1. Login as Admin and capture accessToken
+# @name login
+POST {{baseUrl}}/users/login
+Content-Type: application/json
+
+{
+    "email": "admin@saral.com",
+    "password": "Admin123!"
+}
+
+###
+
+### 2. Get all users using accessToken from login response
+GET {{baseUrl}}/users?PageNumber=1&PageSize=12
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+
+###
+
+### 3. Register a new user and capture userId
+# @name registerUser
+POST {{baseUrl}}/users/register
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+
+{
+    "email": "testuser3@example.com",
+    "firstName": "Test",
+    "lastName": "User"
+}
+
+###
+
+### 4. Get the newly registered user by ID
+GET {{baseUrl}}/users/{{registerUser.response.body.userId}}
+Authorization: Bearer {{login.response.body.accessToken}}
+
+###
+
+### 5. Update the registered user
+PUT {{baseUrl}}/users
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+
+{
+    "userId": "{{registerUser.response.body.userId}}",
+    "firstName": "UpdatedTest",
+    "lastName": "UserUpdated",
+    "email": "testuser1@example.com"
+}
+
+###
+
+### 6. Get the updated user details
+GET {{baseUrl}}/users/{{registerUser.response.body.userId}}
+Authorization: Bearer {{login.response.body.accessToken}}
+
+###
+
+### 7. Deactivate the user
+PUT {{baseUrl}}/users/status
+Authorization: Bearer {{login.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "userId": "{{registerUser.response.body.userId}}",
+  "newStatus": 0
+}
+
+###

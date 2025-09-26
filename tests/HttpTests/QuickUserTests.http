@@ -1,0 +1,53 @@
+### Quick Test Setup for User Management
+### This file provides a quick way to set up authentication and test basic functionality
+
+# @no-reject-unauthorized
+@baseUrl = https://localhost:5001
+
+### Step 1: Login as Admin
+POST {{baseUrl}}/users/login
+Content-Type: application/json
+
+{
+  "email": "admin@saral.com",
+  "password": "Admin123!"
+}
+
+### Step 2: Get All Users (using token from Step 1)
+# Replace {{token}} with the accessToken from Step 1 response
+GET {{baseUrl}}/users
+Authorization: Bearer {{token}}
+
+### Step 3: Get Permission Tree
+# Note: This endpoint requires a userId parameter according to the schema
+GET {{baseUrl}}/permissions/tree/{{adminUserId}}
+Authorization: Bearer {{token}}
+
+### Step 4: Register Test User
+POST {{baseUrl}}/users/register
+Content-Type: application/json
+
+{
+  "email": "quicktest@saral.com",
+  "firstName": "Quick",
+  "lastName": "Test",
+  "password": "QuickTest123!"
+}
+
+### Step 5: Assign Permission to Test User
+# Replace {{testUserId}} with the user ID from registration or user list
+POST {{baseUrl}}/users/{{testUserId}}/permissions
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "permissionKey": "Admin.Permission.Management.View"
+}
+
+### Step 6: Get User Direct Permissions
+GET {{baseUrl}}/users/{{testUserId}}/permissions/direct
+Authorization: Bearer {{token}}
+
+### Step 7: Revoke Permission
+DELETE {{baseUrl}}/users/{{testUserId}}/permissions/Admin.Permission.Management.View
+Authorization: Bearer {{token}}
