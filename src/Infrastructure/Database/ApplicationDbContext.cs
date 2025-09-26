@@ -1,19 +1,20 @@
 ﻿using Application.Abstractions.Data;
-using Domain.Todos;
-using Domain.Users;
+using Domain.Authentication;
+using Domain.EfaConfigs;
+using Domain.Exports;
+using Domain.Files;
+using Domain.MasterData;
 using Domain.PasswordResetTokens;
+using Domain.PDTempData;
 using Domain.Permissions;
-using Domain.Roles;
-using Domain.UserRoles;
 using Domain.RolePermissions;
+using Domain.Roles;
+using Domain.Todos;
+using Domain.UserRoles;
+using Domain.Users;
 using Infrastructure.DomainEvents;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
-using Domain.Authentication;
-using Domain.Exports;
-using Domain.PDTempData;
-using Domain.MasterData;
-using Domain.Files;
 
 namespace Infrastructure.Database;
 
@@ -42,6 +43,8 @@ public sealed class ApplicationDbContext(
     public DbSet<SegmentMaster> SegmentMasters { get; set; } = null!;
 
     public DbSet<UploadedFile> UploadedFiles { get; set; } = null!;
+
+    public DbSet<EfaConfiguration> EfaConfigurations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,17 +1,18 @@
-﻿using Domain.Todos;
-using Domain.Authentication;
-using Domain.Users;
+﻿using Domain.Authentication;
+using Domain.EfaConfigs;
+using Domain.Exports;
+using Domain.Files;
+using Domain.MasterData;
 using Domain.PasswordResetTokens;
+using Domain.PDTempData;
 using Domain.Permissions;
-using Domain.Roles;
-using Domain.UserRoles;
 using Domain.RolePermissions;
+using Domain.Roles;
+using Domain.Todos;
+using Domain.UserRoles;
+using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
-using Domain.Exports;
-using Domain.PDTempData;
-using Domain.MasterData;
-using Domain.Files;
 
 namespace Application.Abstractions.Data;
 
@@ -36,6 +37,8 @@ public interface IApplicationDbContext
     DbSet<SegmentMaster> SegmentMasters { get; }
 
     DbSet<UploadedFile> UploadedFiles { get; }
+
+    DbSet<EfaConfiguration> EfaConfigurations { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
