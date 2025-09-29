@@ -1,49 +1,12 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.Security.Claims;
-using System.Text.Encodings.Web;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Integration.Tests.Helpers;
-
-public class TestAuthenticationSchemeOptions : AuthenticationSchemeOptions
+namespace Integration_Tests.Helpers
 {
-    public string DefaultUserId { get; set; } = Guid.CreateVersion7().ToString();
-    public List<string> Permissions { get; set; } = new();
-}
-
-public class TestAuthenticationHandler : AuthenticationHandler<TestAuthenticationSchemeOptions>
-{
-    public TestAuthenticationHandler(
-        IOptionsMonitor<TestAuthenticationSchemeOptions> options,
-        ILoggerFactory logger,
-        UrlEncoder encoder)
-        : base(options, logger, encoder)
+    internal class TestAuthenticationHandler
     {
-    }
-
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-    {
-        string userId = Context.Request.Headers["X-Test-UserId"].FirstOrDefault()
-            ?? Options.DefaultUserId;
-
-        var permissions = Context.Request.Headers["X-Test-Permissions"]
-            .FirstOrDefault()?.Split(',', StringSplitOptions.RemoveEmptyEntries)
-            ?? Options.Permissions.ToArray();
-
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, userId),
-            new(ClaimTypes.Name, "Test User"),
-            new(ClaimTypes.Email, "test@example.com")
-        };
-
-        claims.AddRange(permissions.Select(p => new Claim("permission", p)));
-
-        var identity = new ClaimsIdentity(claims, "Test");
-        var principal = new ClaimsPrincipal(identity);
-        var ticket = new AuthenticationTicket(principal, "Test");
-
-        return Task.FromResult(AuthenticateResult.Success(ticket));
     }
 }

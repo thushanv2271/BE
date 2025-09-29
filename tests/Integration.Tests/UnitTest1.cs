@@ -1,4 +1,4 @@
-namespace Integration.Tests
+﻿namespace Integration_Tests
 {
     public class UnitTest1
     {

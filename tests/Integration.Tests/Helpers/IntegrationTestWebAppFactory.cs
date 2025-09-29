@@ -1,57 +1,12 @@
-﻿using Infrastructure.Database;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
-using Testcontainers.PostgreSql;
-using Xunit;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Integration.Tests.Helpers;
-
-public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
+namespace Integration_Tests.Helpers
 {
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:15-alpine")
-        .WithDatabase("test_db")
-        .WithUsername("postgres")
-        .WithPassword("postgres")
-        .Build();
-
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    internal class IntegrationTestWebAppFactory
     {
-        builder.ConfigureTestServices(services =>
-        {
-            services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
-            services.RemoveAll<ApplicationDbContext>();
-
-            services.AddDbContext<ApplicationDbContext>(options =>
-            {
-                options.UseNpgsql(_dbContainer.GetConnectionString());
-            });
-
-            services.AddAuthentication("Test")
-                .AddScheme<TestAuthenticationSchemeOptions, TestAuthenticationHandler>(
-                    "Test", options => { });
-        });
-
-        builder.UseEnvironment("Testing");
-    }
-
-    public async Task InitializeAsync()
-    {
-        await _dbContainer.StartAsync();
-
-        using var scope = Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await dbContext.Database.MigrateAsync();
-    }
-
-    public new async Task DisposeAsync()
-    {
-        await _dbContainer.StopAsync();
-        await _dbContainer.DisposeAsync();
     }
 }
