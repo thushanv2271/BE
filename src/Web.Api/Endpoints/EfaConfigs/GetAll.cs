@@ -6,6 +6,10 @@ using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.EfaConfigs;
 
+/// <summary>
+/// Endpoint for retrieving all EFA configurations.
+/// Maps a GET request to the query handler.
+/// </summary>
 internal sealed class GetAll : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)

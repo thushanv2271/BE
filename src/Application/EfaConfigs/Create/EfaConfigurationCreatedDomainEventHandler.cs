@@ -9,7 +9,6 @@ using SharedKernel;
 
 namespace Application.EfaConfigs.Create;
 
-
 /// <summary>
 /// Handles the event when a new EFA configuration is created.
 /// Logs information about the created configuration.

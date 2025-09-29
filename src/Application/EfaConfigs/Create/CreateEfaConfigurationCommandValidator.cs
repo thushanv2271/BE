@@ -14,6 +14,7 @@ namespace Application.EfaConfigs.Create;
 internal sealed class CreateEfaConfigurationCommandValidator
     : AbstractValidator<CreateEfaConfigurationCommand>
 {
+    //Ensures input data is valid before sending it to the database.
     public CreateEfaConfigurationCommandValidator()
     {
         RuleFor(x => x.Year)

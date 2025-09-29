@@ -13,16 +13,8 @@ namespace Web.Api.Endpoints.EfaConfigs;
 /// </summary>
 internal sealed class Create : IEndpoint
 {
-    /// <summary>
-    /// Represents the request body for creating an EFA configuration.
-    /// </summary>
     public sealed record CreateRequest(int Year, decimal EfaRate);
 
-
-    /// <summary>
-    /// Maps the endpoint to the application's route builder.
-    /// </summary>
-    /// <param name="app">The endpoint route builder.</param>
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("efa-configurations", async (
@@ -42,7 +34,7 @@ internal sealed class Create : IEndpoint
                 ));
                 return CustomResults.Problem(failureResult);
             }
-
+            // Create the command from request + userId
             var command = new CreateEfaConfigurationCommand(
                 request.Year,
                 request.EfaRate,
@@ -50,6 +42,7 @@ internal sealed class Create : IEndpoint
 
             Result<Guid> result = await handler.Handle(command, cancellationToken);
 
+            //Map result to HTTP response
             return result.Match(
                 id => Results.Created($"/efa-configurations/{id}", new { id }),
                 CustomResults.Problem);

@@ -12,19 +12,9 @@ using SharedKernel;
 namespace Application.EfaConfigs.Create;
 
 /// <summary>
-/// Handles the command for creating a new EFA configuration.
+/// Handles the CreateEfaConfigurationCommand.
+/// Responsible for creating a new EFA configuration in the database.
 /// </summary>
-/// <param name="command">
-/// The command containing details of the EFA configuration to create,
-/// such as year, rate, and updated information.
-/// </param>
-/// <param name="cancellationToken">
-/// Token to stop the process if the request is cancelled.
-/// </param>
-/// <returns>
-/// A <see cref="Result{T}"/> with the ID of the created EFA configuration,
-/// or a failure if a configuration for the same year already exists.
-/// </returns>
 internal sealed class CreateEfaConfigurationCommandHandler(
     IApplicationDbContext context,
     IDateTimeProvider dateTimeProvider)
@@ -44,6 +34,7 @@ internal sealed class CreateEfaConfigurationCommandHandler(
                 EfaConfigurationErrors.YearAlreadyExists(command.Year));
         }
 
+        // Create a new EfaConfiguration entity
         var efaConfiguration = new EfaConfiguration
         {
             Id = Guid.CreateVersion7(),

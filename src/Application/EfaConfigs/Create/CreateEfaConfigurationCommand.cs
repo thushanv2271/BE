@@ -6,8 +6,12 @@ using System.Threading.Tasks;
 using Application.Abstractions.Messaging;
 
 namespace Application.EfaConfigs.Create;
+
+// This command is used to create a new EfaConfiguration in the system.
 public sealed record CreateEfaConfigurationCommand(
     int Year,
     decimal EfaRate,
     Guid UpdatedBy
-) : ICommand<Guid>;
+) : ICommand<Guid>; // Implements ICommand and will return a Guid (ID of the created record)
+
+
