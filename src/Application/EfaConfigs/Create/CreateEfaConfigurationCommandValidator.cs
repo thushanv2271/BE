@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 using FluentValidation;
 
 namespace Application.EfaConfigs.Create;
+
+/// <summary>
+/// Validates the input data for creating a new EFA configuration.
+/// Ensures the year, EFA rate, and updated-by fields are correct.
+/// </summary>
 internal sealed class CreateEfaConfigurationCommandValidator
     : AbstractValidator<CreateEfaConfigurationCommand>
 {

@@ -1,19 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Domain.EfaConfigs;
+﻿using Domain.EfaConfigs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.EfaConfigs;
+
+/// <summary>
+/// Configures the EF Core mapping for the <see cref="EfaConfiguration"/> entity.
+/// Defines keys, properties, indexes, and the table name.
+/// </summary>
 internal sealed class EfaConfigurationConfiguration : IEntityTypeConfiguration<EfaConfiguration>
 {
     public void Configure(EntityTypeBuilder<EfaConfiguration> builder)
     {
+        // Primary key
         builder.HasKey(e => e.Id);
 
+        // Properties
         builder.Property(e => e.Year)
             .IsRequired();
 
@@ -27,11 +29,12 @@ internal sealed class EfaConfigurationConfiguration : IEntityTypeConfiguration<E
         builder.Property(e => e.UpdatedBy)
             .IsRequired();
 
-        // Create unique index on Year
+        // Indexes
         builder.HasIndex(e => e.Year)
             .IsUnique()
             .HasDatabaseName("IX_EfaConfigurations_Year");
 
+        // Table name (snake_case will be applied by EFCore.NamingConventions)
         builder.ToTable("efa_configurations");
     }
 }

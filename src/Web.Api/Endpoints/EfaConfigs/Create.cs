@@ -7,10 +7,22 @@ using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.EfaConfigs;
 
+/// <summary>
+/// Endpoint for creating a new EFA configuration.
+/// Maps a POST request to handle creating an EFA configuration using the command handler.
+/// </summary>
 internal sealed class Create : IEndpoint
 {
+    /// <summary>
+    /// Represents the request body for creating an EFA configuration.
+    /// </summary>
     public sealed record CreateRequest(int Year, decimal EfaRate);
 
+
+    /// <summary>
+    /// Maps the endpoint to the application's route builder.
+    /// </summary>
+    /// <param name="app">The endpoint route builder.</param>
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("efa-configurations", async (

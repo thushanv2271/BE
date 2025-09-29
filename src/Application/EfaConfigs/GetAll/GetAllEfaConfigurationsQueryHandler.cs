@@ -9,10 +9,24 @@ using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.EfaConfigs.GetAll;
+
+
+/// <summary>
+/// Handles the query to get all EFA configurations from the database.
+/// Returns a list of <see cref="EfaConfigurationResponse"/> ordered by year (most recent first).
+/// </summary>
 internal sealed class GetAllEfaConfigurationsQueryHandler(
     IApplicationDbContext context)
     : IQueryHandler<GetAllEfaConfigurationsQuery, List<EfaConfigurationResponse>>
 {
+    /// <summary>
+    /// Handles the query to retrieve all EFA configurations.
+    /// </summary>
+    /// <param name="query">The query object requesting all configurations.</param>
+    /// <param name="cancellationToken">Token to cancel the operation if needed.</param>
+    /// <returns>
+    /// A <see cref="Result{T}"/> containing a list of EFA configurations.
+    /// </returns>
     public async Task<Result<List<EfaConfigurationResponse>>> Handle(
         GetAllEfaConfigurationsQuery query,
         CancellationToken cancellationToken)
