@@ -28,4 +28,8 @@
     <EmbeddedResource Include="Schemas\PDSetupSteps.schema.json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="EfaConfigs\Create\CreateBulkEfaConfigurationCommandValidator.cs" />
+  </ItemGroup>
+
 </Project>

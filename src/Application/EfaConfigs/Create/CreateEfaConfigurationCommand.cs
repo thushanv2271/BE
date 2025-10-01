@@ -7,11 +7,33 @@ using Application.Abstractions.Messaging;
 
 namespace Application.EfaConfigs.Create;
 
-// This command is used to create a new EfaConfiguration in the system.
+// Single item for backward compatibility
 public sealed record CreateEfaConfigurationCommand(
     int Year,
     decimal EfaRate,
     Guid UpdatedBy
-) : ICommand<Guid>; // Implements ICommand and will return a Guid (ID of the created record)
+) : ICommand<Guid>;
 
+// New: Bulk save command
+public sealed record CreateBulkEfaConfigurationCommand(
+    List<EfaConfigurationItem> Items,
+    Guid UpdatedBy
+) : ICommand<BulkEfaConfigurationResponse>;
 
+public sealed record EfaConfigurationItem(
+    int Year,
+    decimal EfaRate
+);
+
+public sealed record BulkEfaConfigurationResponse(
+    List<EfaConfigurationSummary> Created,
+    List<EfaConfigurationSummary> Updated,
+    int TotalProcessed
+);
+
+public sealed record EfaConfigurationSummary(
+    Guid Id,
+    int Year,
+    decimal EfaRate,
+    DateTime UpdatedAt
+);
