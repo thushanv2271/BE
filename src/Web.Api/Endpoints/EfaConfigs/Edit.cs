@@ -9,11 +9,12 @@ namespace Web.Api.Endpoints.EfaConfigs;
 
 internal sealed class Edit : IEndpoint
 {
-    public sealed record EditRequest(Guid Id, decimal EfaRate);
+    public sealed record EditRequest(Guid Id, int Year, decimal EfaRate);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("efa-configurations", async (
+        app.MapPut("efa-configurations/{id:guid}", async (
+            Guid id,
             EditRequest request,
             HttpContext httpContext,
             ICommandHandler<EditEfaConfigurationCommand, EditEfaConfigurationResponse> handler,
@@ -30,8 +31,10 @@ internal sealed class Edit : IEndpoint
                 return CustomResults.Problem(failureResult);
             }
 
+            // Use ID from route parameter
             var command = new EditEfaConfigurationCommand(
-                request.Id,
+                id,
+                request.Year,
                 request.EfaRate,
                 userId);
 

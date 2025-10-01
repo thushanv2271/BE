@@ -7,28 +7,20 @@ using Application.Abstractions.Messaging;
 
 namespace Application.EfaConfigs.Create;
 
-// Single item for backward compatibility
+//save command
 public sealed record CreateEfaConfigurationCommand(
-    int Year,
-    decimal EfaRate,
-    Guid UpdatedBy
-) : ICommand<Guid>;
-
-// New: Bulk save command
-public sealed record CreateBulkEfaConfigurationCommand(
     List<EfaConfigurationItem> Items,
     Guid UpdatedBy
-) : ICommand<BulkEfaConfigurationResponse>;
+) : ICommand<EfaConfigurationResponse>;
 
 public sealed record EfaConfigurationItem(
     int Year,
     decimal EfaRate
 );
 
-public sealed record BulkEfaConfigurationResponse(
+public sealed record EfaConfigurationResponse(
     List<EfaConfigurationSummary> Created,
-    List<EfaConfigurationSummary> Updated,
-    int TotalProcessed
+    List<EfaConfigurationSummary> Updated
 );
 
 public sealed record EfaConfigurationSummary(

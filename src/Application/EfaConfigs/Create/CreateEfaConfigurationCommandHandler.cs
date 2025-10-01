@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
@@ -12,44 +10,77 @@ using SharedKernel;
 namespace Application.EfaConfigs.Create;
 
 /// <summary>
-/// Handles the CreateEfaConfigurationCommand.
-/// Responsible for creating a new EFA configuration in the database.
+/// Handles  creation/update of EFA configurations.
+/// If a year exists, it updates; otherwise, it creates a new record.
 /// </summary>
 internal sealed class CreateEfaConfigurationCommandHandler(
     IApplicationDbContext context,
     IDateTimeProvider dateTimeProvider)
-    : ICommandHandler<CreateEfaConfigurationCommand, Guid>
+    : ICommandHandler<CreateEfaConfigurationCommand, EfaConfigurationResponse>
 {
-    public async Task<Result<Guid>> Handle(
+    public async Task<Result<EfaConfigurationResponse>> Handle(
         CreateEfaConfigurationCommand command,
         CancellationToken cancellationToken)
     {
-        // Check if configuration for this year already exists
-        bool yearExists = await context.EfaConfigurations
-            .AnyAsync(e => e.Year == command.Year, cancellationToken);
+        List<EfaConfigurationSummary> created = new();
+        List<EfaConfigurationSummary> updated = new();
 
-        if (yearExists)
+        // Get all years from the command
+        var years = command.Items.Select(i => i.Year).ToList();
+
+        // Fetch existing configurations for these years
+        List<EfaConfiguration> existingConfigs = await context.EfaConfigurations
+            .Where(e => years.Contains(e.Year))
+            .ToListAsync(cancellationToken);
+
+        var existingYears = existingConfigs.ToDictionary(e => e.Year);
+
+        foreach (EfaConfigurationItem item in command.Items)
         {
-            return Result.Failure<Guid>(
-                EfaConfigurationErrors.YearAlreadyExists(command.Year));
+            if (existingYears.TryGetValue(item.Year, out EfaConfiguration? existing))
+            {
+                // Update existing
+                existing.EfaRate = item.EfaRate;
+                existing.UpdatedAt = dateTimeProvider.UtcNow;
+                existing.UpdatedBy = command.UpdatedBy;
+
+                updated.Add(new EfaConfigurationSummary(
+                    existing.Id,
+                    existing.Year,
+                    existing.EfaRate,
+                    existing.UpdatedAt
+                ));
+            }
+            else
+            {
+                // Create new
+                EfaConfiguration newConfig = new()
+                {
+                    Id = Guid.CreateVersion7(),
+                    Year = item.Year,
+                    EfaRate = item.EfaRate,
+                    UpdatedAt = dateTimeProvider.UtcNow,
+                    UpdatedBy = command.UpdatedBy
+                };
+
+                newConfig.Raise(new EfaConfigurationCreatedDomainEvent(newConfig.Id));
+                context.EfaConfigurations.Add(newConfig);
+
+                created.Add(new EfaConfigurationSummary(
+                    newConfig.Id,
+                    newConfig.Year,
+                    newConfig.EfaRate,
+                    newConfig.UpdatedAt
+                ));
+            }
         }
-
-        // Create a new EfaConfiguration entity
-        var efaConfiguration = new EfaConfiguration
-        {
-            Id = Guid.CreateVersion7(),
-            Year = command.Year,
-            EfaRate = command.EfaRate,
-            UpdatedAt = dateTimeProvider.UtcNow,
-            UpdatedBy = command.UpdatedBy
-        };
-
-        efaConfiguration.Raise(new EfaConfigurationCreatedDomainEvent(efaConfiguration.Id));
-
-        context.EfaConfigurations.Add(efaConfiguration);
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(efaConfiguration.Id);
+        return Result.Success(new EfaConfigurationResponse(
+            created,
+            updated
+       
+        ));
     }
 }

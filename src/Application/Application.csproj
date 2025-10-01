@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="EfaConfigs\Create\CreateBulkEfaConfigurationCommandValidator.cs" />
+    <None Include="EfaConfigs\Create\CreateEfaConfigurationCommandValidator.cs" />
   </ItemGroup>
 
 </Project>

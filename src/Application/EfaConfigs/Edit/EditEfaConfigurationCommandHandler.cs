@@ -24,6 +24,21 @@ internal sealed class EditEfaConfigurationCommandHandler(
                 EfaConfigurationErrors.NotFound(command.Id));
         }
 
+        // Check if the new year conflicts with another record (only if year is changing)
+        if (efaConfig.Year != command.Year)
+        {
+            bool yearExists = await context.EfaConfigurations
+                .AnyAsync(e => e.Year == command.Year && e.Id != command.Id, cancellationToken);
+
+            if (yearExists)
+            {
+                return Result.Failure<EditEfaConfigurationResponse>(
+                    EfaConfigurationErrors.YearAlreadyExists(command.Year));
+            }
+
+            efaConfig.Year = command.Year;
+        }
+
         efaConfig.EfaRate = command.EfaRate;
         efaConfig.UpdatedAt = dateTimeProvider.UtcNow;
         efaConfig.UpdatedBy = command.UpdatedBy;

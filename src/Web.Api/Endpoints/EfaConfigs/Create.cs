@@ -9,56 +9,22 @@ namespace Web.Api.Endpoints.EfaConfigs;
 
 internal sealed class Create : IEndpoint
 {
-    public sealed record CreateRequest(int Year, decimal EfaRate);
-    public sealed record CreateBulkRequest(List<EfaConfigurationItemDto> Items);
+    public sealed record CreateRequest(List<EfaConfigurationItemDto> Items);
     public sealed record EfaConfigurationItemDto(int Year, decimal EfaRate);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        // Single create (kept for backward compatibility)
+        // save/update
         app.MapPost("efa-configurations", async (
             CreateRequest request,
             HttpContext httpContext,
-            ICommandHandler<CreateEfaConfigurationCommand, Guid> handler,
+            ICommandHandler<CreateEfaConfigurationCommand, EfaConfigurationResponse> handler,
             CancellationToken cancellationToken) =>
         {
             string? userIdString = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
             {
-                var failureResult = Result.Failure<Guid>(new Error(
-                    "InvalidToken",
-                    "Invalid token: UserId not found",
-                    ErrorType.Validation
-                ));
-                return CustomResults.Problem(failureResult);
-            }
-
-            var command = new CreateEfaConfigurationCommand(
-                request.Year,
-                request.EfaRate,
-                userId);
-
-            Result<Guid> result = await handler.Handle(command, cancellationToken);
-
-            return result.Match(
-                id => Results.Created($"/efa-configurations/{id}", new { id }),
-                CustomResults.Problem);
-        })
-        .RequireAuthorization()
-        .HasPermission(PermissionRegistry.AdminSettingsRolePermissionCreate)
-        .WithTags("EFA Configurations");
-
-        // Bulk save/update
-        app.MapPost("efa-configurations/bulk", async (
-            CreateBulkRequest request,
-            HttpContext httpContext,
-            ICommandHandler<CreateBulkEfaConfigurationCommand, BulkEfaConfigurationResponse> handler,
-            CancellationToken cancellationToken) =>
-        {
-            string? userIdString = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
-            {
-                var failureResult = Result.Failure<BulkEfaConfigurationResponse>(new Error(
+                var failureResult = Result.Failure<EfaConfigurationResponse>(new Error(
                     "InvalidToken",
                     "Invalid token: UserId not found",
                     ErrorType.Validation
@@ -70,9 +36,9 @@ internal sealed class Create : IEndpoint
                 .Select(i => new EfaConfigurationItem(i.Year, i.EfaRate))
                 .ToList();
 
-            var command = new CreateBulkEfaConfigurationCommand(items, userId);
+            var command = new CreateEfaConfigurationCommand(items, userId);
 
-            Result<BulkEfaConfigurationResponse> result = await handler.Handle(command, cancellationToken);
+            Result<EfaConfigurationResponse> result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
                 response => Results.Ok(response),
