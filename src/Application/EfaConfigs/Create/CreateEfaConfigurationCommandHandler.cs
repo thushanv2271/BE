@@ -10,7 +10,7 @@ using SharedKernel;
 namespace Application.EfaConfigs.Create;
 
 /// <summary>
-/// Handles  creation/update of EFA configurations.
+/// Handles creation/update of EFA configurations.
 /// If a year exists, it updates; otherwise, it creates a new record.
 /// </summary>
 internal sealed class CreateEfaConfigurationCommandHandler(
@@ -80,7 +80,6 @@ internal sealed class CreateEfaConfigurationCommandHandler(
         return Result.Success(new EfaConfigurationResponse(
             created,
             updated
-       
         ));
     }
 }

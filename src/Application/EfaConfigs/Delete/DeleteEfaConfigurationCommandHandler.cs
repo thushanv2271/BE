@@ -24,13 +24,18 @@ internal sealed class DeleteEfaConfigurationCommandHandler(
                 EfaConfigurationErrors.NotFound(command.Id));
         }
 
+        // Store values before deletion
+        var response = new DeleteEfaConfigurationResponse(
+            efaConfig.Id,
+            efaConfig.Year,
+            efaConfig.EfaRate,
+            dateTimeProvider.UtcNow,
+            command.DeletedBy
+        );
+
         context.EfaConfigurations.Remove(efaConfig);
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new DeleteEfaConfigurationResponse(
-            efaConfig.Id,
-            efaConfig.Year,
-            dateTimeProvider.UtcNow
-        ));
+        return Result.Success(response);
     }
 }

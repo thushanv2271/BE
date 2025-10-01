@@ -10,6 +10,7 @@ public sealed record DeleteEfaConfigurationCommand(
 public sealed record DeleteEfaConfigurationResponse(
     Guid Id,
     int Year,
-    DateTime DeletedAt
+    decimal EfaRate,
+    DateTime DeletedAt,
+    Guid DeletedBy
 );
-

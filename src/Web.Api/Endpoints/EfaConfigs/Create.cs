@@ -9,14 +9,13 @@ namespace Web.Api.Endpoints.EfaConfigs;
 
 internal sealed class Create : IEndpoint
 {
-    public sealed record CreateRequest(List<EfaConfigurationItemDto> Items);
     public sealed record EfaConfigurationItemDto(int Year, decimal EfaRate);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        // save/update
+        // save/update - now accepts array directly
         app.MapPost("efa-configurations", async (
-            CreateRequest request,
+            List<EfaConfigurationItemDto> request,
             HttpContext httpContext,
             ICommandHandler<CreateEfaConfigurationCommand, EfaConfigurationResponse> handler,
             CancellationToken cancellationToken) =>
@@ -32,7 +31,7 @@ internal sealed class Create : IEndpoint
                 return CustomResults.Problem(failureResult);
             }
 
-            var items = request.Items
+            var items = request
                 .Select(i => new EfaConfigurationItem(i.Year, i.EfaRate))
                 .ToList();
 
@@ -41,7 +40,7 @@ internal sealed class Create : IEndpoint
             Result<EfaConfigurationResponse> result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
-                response => Results.Ok(response),
+                response => Results.Ok(response.Created.Concat(response.Updated).ToList()),
                 CustomResults.Problem);
         })
         .RequireAuthorization()

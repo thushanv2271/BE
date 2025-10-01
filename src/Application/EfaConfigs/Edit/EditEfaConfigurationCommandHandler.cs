@@ -35,10 +35,12 @@ internal sealed class EditEfaConfigurationCommandHandler(
                 return Result.Failure<EditEfaConfigurationResponse>(
                     EfaConfigurationErrors.YearAlreadyExists(command.Year));
             }
-
-            efaConfig.Year = command.Year;
         }
 
+        // Always update the year (moved outside the if block)
+        efaConfig.Year = command.Year;
+
+        // Update other fields
         efaConfig.EfaRate = command.EfaRate;
         efaConfig.UpdatedAt = dateTimeProvider.UtcNow;
         efaConfig.UpdatedBy = command.UpdatedBy;
@@ -49,7 +51,8 @@ internal sealed class EditEfaConfigurationCommandHandler(
             efaConfig.Id,
             efaConfig.Year,
             efaConfig.EfaRate,
-            efaConfig.UpdatedAt
+            efaConfig.UpdatedAt,
+            efaConfig.UpdatedBy
         ));
     }
 }

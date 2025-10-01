@@ -13,5 +13,8 @@ public sealed record EditEfaConfigurationResponse(
     Guid Id,
     int Year,
     decimal EfaRate,
-    DateTime UpdatedAt
-);
+    DateTime UpdatedAt,
+    Guid UpdatedBy
+)
+{
+}
