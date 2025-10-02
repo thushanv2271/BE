@@ -6,6 +6,11 @@ using SharedKernel;
 
 namespace Application.EfaConfigs.Edit;
 
+/// <summary>
+/// Handles updating an existing EFA configuration.
+/// Validates existence, checks for year conflicts, updates the configuration,
+/// and returns a summary of the updated record.
+/// </summary>
 internal sealed class EditEfaConfigurationCommandHandler(
     IApplicationDbContext context,
     IDateTimeProvider dateTimeProvider)
@@ -15,6 +20,7 @@ internal sealed class EditEfaConfigurationCommandHandler(
         EditEfaConfigurationCommand command,
         CancellationToken cancellationToken)
     {
+        // Fetch the configuration by ID
         EfaConfiguration? efaConfig = await context.EfaConfigurations
             .FirstOrDefaultAsync(e => e.Id == command.Id, cancellationToken);
 
@@ -37,14 +43,13 @@ internal sealed class EditEfaConfigurationCommandHandler(
             }
         }
 
-        // Always update the year (moved outside the if block)
+        // Update fields
         efaConfig.Year = command.Year;
-
-        // Update other fields
         efaConfig.EfaRate = command.EfaRate;
         efaConfig.UpdatedAt = dateTimeProvider.UtcNow;
         efaConfig.UpdatedBy = command.UpdatedBy;
 
+        // Persist changes
         await context.SaveChangesAsync(cancellationToken);
 
         return Result.Success(new EditEfaConfigurationResponse(

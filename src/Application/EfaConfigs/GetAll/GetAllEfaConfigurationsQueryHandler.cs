@@ -1,37 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.Abstractions.Data;
+﻿using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.EfaConfigs.GetAll;
+
 /// <summary>
 /// Handles the query to get all EFA configurations from the database.
-/// Returns a list of <see cref="EfaConfigurationResponse"/> ordered by year (most recent first).
+/// Returns a list of <see cref="GetAllEfaConfigurationResponse"/> ordered by year (most recent first).
 /// </summary>
 internal sealed class GetAllEfaConfigurationsQueryHandler(
     IApplicationDbContext context)
-    : IQueryHandler<GetAllEfaConfigurationsQuery, List<EfaConfigurationResponse>>
+    : IQueryHandler<GetAllEfaConfigurationsQuery, List<GetAllEfaConfigurationResponse>>
 {
-    public async Task<Result<List<EfaConfigurationResponse>>> Handle(
+    public async Task<Result<List<GetAllEfaConfigurationResponse>>> Handle(
         GetAllEfaConfigurationsQuery query,
         CancellationToken cancellationToken)
     {
-        List<EfaConfigurationResponse> configurations = await context.EfaConfigurations
-            .AsNoTracking()                       //improves performance since we don't need EF to track changes
-            .OrderByDescending(e => e.Year)       
-            .Select(e => new EfaConfigurationResponse
-            {
-                Id = e.Id,
-                Year = e.Year,
-                EfaRate = e.EfaRate,
-                UpdatedAt = e.UpdatedAt,
-                UpdatedBy = e.UpdatedBy
-            })
+        List<GetAllEfaConfigurationResponse> configurations = await context.EfaConfigurations
+            .AsNoTracking()
+            .OrderByDescending(e => e.Year)
+            .Select(e => new GetAllEfaConfigurationResponse(
+                e.Id,
+                e.Year,
+                e.EfaRate,
+                e.UpdatedAt,
+                e.UpdatedBy
+            ))
             .ToListAsync(cancellationToken);
 
         return Result.Success(configurations);

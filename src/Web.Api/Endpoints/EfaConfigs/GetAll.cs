@@ -8,20 +8,25 @@ namespace Web.Api.Endpoints.EfaConfigs;
 
 /// <summary>
 /// Endpoint for retrieving all EFA configurations.
-/// Maps a GET request to the query handler.
 /// </summary>
 internal sealed class GetAll : IEndpoint
 {
+    /// <summary>
+    /// Maps the HTTP GET endpoint for fetching all EFA configurations.
+    /// </summary>
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("efa-configurations", async (
-            IQueryHandler<GetAllEfaConfigurationsQuery, List<EfaConfigurationResponse>> handler,
+            IQueryHandler<GetAllEfaConfigurationsQuery, List<GetAllEfaConfigurationResponse>> handler,
             CancellationToken cancellationToken) =>
         {
+            // Create query
             var query = new GetAllEfaConfigurationsQuery();
 
-            Result<List<EfaConfigurationResponse>> result = await handler.Handle(query, cancellationToken);
+            // Execute query
+            Result<List<GetAllEfaConfigurationResponse>> result = await handler.Handle(query, cancellationToken);
 
+            // Return success or failure response
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .RequireAuthorization()

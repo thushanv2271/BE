@@ -2,6 +2,9 @@
 
 namespace Application.EfaConfigs.Edit;
 
+/// <summary>
+/// Ensures that all required fields are provided and valid before processing an update.
+/// </summary>
 internal sealed class EditEfaConfigurationCommandValidator
     : AbstractValidator<EditEfaConfigurationCommand>
 {

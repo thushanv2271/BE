@@ -6,15 +6,21 @@ using SharedKernel;
 
 namespace Application.EfaConfigs.Delete;
 
+/// <summary>
+/// Handles the deletion of an existing EFA configuration.
+/// Validates existence, removes the configuration, and returns a summary of the deleted item.
+/// </summary>
 internal sealed class DeleteEfaConfigurationCommandHandler(
     IApplicationDbContext context,
     IDateTimeProvider dateTimeProvider)
     : ICommandHandler<DeleteEfaConfigurationCommand, DeleteEfaConfigurationResponse>
 {
+
     public async Task<Result<DeleteEfaConfigurationResponse>> Handle(
         DeleteEfaConfigurationCommand command,
         CancellationToken cancellationToken)
     {
+        // Fetch the configuration by ID
         EfaConfiguration? efaConfig = await context.EfaConfigurations
             .FirstOrDefaultAsync(e => e.Id == command.Id, cancellationToken);
 
@@ -24,7 +30,7 @@ internal sealed class DeleteEfaConfigurationCommandHandler(
                 EfaConfigurationErrors.NotFound(command.Id));
         }
 
-        // Store values before deletion
+        // Store values before deletion to include in the response
         var response = new DeleteEfaConfigurationResponse(
             efaConfig.Id,
             efaConfig.Year,
@@ -33,6 +39,7 @@ internal sealed class DeleteEfaConfigurationCommandHandler(
             command.DeletedBy
         );
 
+        // Remove the configuration
         context.EfaConfigurations.Remove(efaConfig);
         await context.SaveChangesAsync(cancellationToken);
 

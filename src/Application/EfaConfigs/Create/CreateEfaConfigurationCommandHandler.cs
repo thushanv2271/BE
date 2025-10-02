@@ -10,36 +10,42 @@ using SharedKernel;
 namespace Application.EfaConfigs.Create;
 
 /// <summary>
-/// Handles creation/update of EFA configurations.
-/// If a year exists, it updates; otherwise, it creates a new record.
+/// Command handler responsible for creating or updating EFA configurations.
+/// If a configuration for a given year already exists, it updates the record.
+/// Otherwise, it creates a new configuration.
 /// </summary>
 internal sealed class CreateEfaConfigurationCommandHandler(
     IApplicationDbContext context,
     IDateTimeProvider dateTimeProvider)
-    : ICommandHandler<CreateEfaConfigurationCommand, EfaConfigurationResponse>
+    : ICommandHandler<CreateEfaConfigurationCommand, CreateEfaConfigurationResponse>
 {
-    public async Task<Result<EfaConfigurationResponse>> Handle(
+    /// <summary>
+    /// Creates new EFA configurations or updates existing ones based on the provided years.
+    /// </summary>
+
+    public async Task<Result<CreateEfaConfigurationResponse>> Handle(
         CreateEfaConfigurationCommand command,
         CancellationToken cancellationToken)
     {
         List<EfaConfigurationSummary> created = new();
         List<EfaConfigurationSummary> updated = new();
 
-        // Get all years from the command
+        // Extract all requested years
         var years = command.Items.Select(i => i.Year).ToList();
 
-        // Fetch existing configurations for these years
+        // Fetch any existing configurations for these years
         List<EfaConfiguration> existingConfigs = await context.EfaConfigurations
             .Where(e => years.Contains(e.Year))
             .ToListAsync(cancellationToken);
 
+        // Map existing configurations by year for quick lookup
         var existingYears = existingConfigs.ToDictionary(e => e.Year);
 
         foreach (EfaConfigurationItem item in command.Items)
         {
             if (existingYears.TryGetValue(item.Year, out EfaConfiguration? existing))
             {
-                // Update existing
+                // Update existing configuration
                 existing.EfaRate = item.EfaRate;
                 existing.UpdatedAt = dateTimeProvider.UtcNow;
                 existing.UpdatedBy = command.UpdatedBy;
@@ -48,12 +54,13 @@ internal sealed class CreateEfaConfigurationCommandHandler(
                     existing.Id,
                     existing.Year,
                     existing.EfaRate,
-                    existing.UpdatedAt
+                    existing.UpdatedAt,
+                    existing.UpdatedBy
                 ));
             }
             else
             {
-                // Create new
+                // Create new configuration
                 EfaConfiguration newConfig = new()
                 {
                     Id = Guid.CreateVersion7(),
@@ -63,6 +70,7 @@ internal sealed class CreateEfaConfigurationCommandHandler(
                     UpdatedBy = command.UpdatedBy
                 };
 
+                // Raise domain event for the newly created configuration
                 newConfig.Raise(new EfaConfigurationCreatedDomainEvent(newConfig.Id));
                 context.EfaConfigurations.Add(newConfig);
 
@@ -70,14 +78,16 @@ internal sealed class CreateEfaConfigurationCommandHandler(
                     newConfig.Id,
                     newConfig.Year,
                     newConfig.EfaRate,
-                    newConfig.UpdatedAt
+                    newConfig.UpdatedAt,
+                    newConfig.UpdatedBy
                 ));
             }
         }
 
+        // Persist changes
         await context.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new EfaConfigurationResponse(
+        return Result.Success(new CreateEfaConfigurationResponse(
             created,
             updated
         ));

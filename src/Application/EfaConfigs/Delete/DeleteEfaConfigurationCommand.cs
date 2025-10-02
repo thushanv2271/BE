@@ -2,15 +2,11 @@
 
 namespace Application.EfaConfigs.Delete;
 
+/// <summary>
+/// Command to delete an existing EFA configuration by its unique identifier.
+/// </summary>
+
 public sealed record DeleteEfaConfigurationCommand(
     Guid Id,
     Guid DeletedBy
 ) : ICommand<DeleteEfaConfigurationResponse>;
-
-public sealed record DeleteEfaConfigurationResponse(
-    Guid Id,
-    int Year,
-    decimal EfaRate,
-    DateTime DeletedAt,
-    Guid DeletedBy
-);

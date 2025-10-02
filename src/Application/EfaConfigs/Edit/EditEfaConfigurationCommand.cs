@@ -2,19 +2,12 @@
 
 namespace Application.EfaConfigs.Edit;
 
+/// <summary>
+/// Command to edit an existing EFA configuration.
+/// </summary>
 public sealed record EditEfaConfigurationCommand(
     Guid Id,
     int Year,
     decimal EfaRate,
     Guid UpdatedBy
 ) : ICommand<EditEfaConfigurationResponse>;
-
-public sealed record EditEfaConfigurationResponse(
-    Guid Id,
-    int Year,
-    decimal EfaRate,
-    DateTime UpdatedAt,
-    Guid UpdatedBy
-)
-{
-}
