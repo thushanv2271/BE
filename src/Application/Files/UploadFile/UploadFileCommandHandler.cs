@@ -100,6 +100,7 @@ internal sealed class UploadFileCommandHandler(
         // Persist UploadedFile entity
         var uploaded = new UploadedFile
         {
+            Id = Guid.NewGuid(),
             OriginalFileName = command.FileName,
             StoredFileName = storedFileName,
             ContentType = command.ContentType,
@@ -124,6 +125,7 @@ internal sealed class UploadFileCommandHandler(
         logger.LogInformation("File '{FileName}' uploaded by {UserId} to '{Location}'", storedFileName, command.UploadedBy, savedLocation);
 
         var response = new UploadFileResponse(
+            Id: uploaded.Id,
             Url: new Uri(savedLocation),
             StoredFileName: storedFileName,
             Size: command.Content.LongLength
