@@ -2,7 +2,7 @@ namespace Domain.Files;
 
 /// <summary>
 /// Represents a file that has been uploaded, including metadata such as its original name, storage details, and upload
-/// information.
+/// information .
 /// </summary>
 /// <remarks>This class provides metadata about an uploaded file, including its original and stored file names,
 /// MIME type, size, and paths for physical storage and public access.  It also includes information about the user who
