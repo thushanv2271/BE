@@ -1,14 +1,13 @@
-﻿using System.Net;
-using System.Net.Http.Json;
-using Domain.EfaConfigs;
-using FluentAssertions;
+﻿using Domain.EfaConfigs;
+using Integration_Test.Common;
+using Integration_Test.Helpers;
 using Microsoft.EntityFrameworkCore;
-using Integration.Tests.Common;
-using Integration.Tests.Helpers;
+using System.Net;
+using System.Net.Http.Json;
 using Xunit;
+using FluentAssertions;
 
-namespace Integration.Tests.EfaConfigurations;
-
+namespace Integration_Test.EfaConfigurations;
 public class EfaConfigurationEndpointsTests : BaseIntegrationTest
 {
     private const string BaseUrl = "efa-configurations";

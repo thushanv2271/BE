@@ -1,10 +1,10 @@
 ﻿using Infrastructure.Database;
+using Integration_Test.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
-using Integration.Tests.Helpers;
 using Xunit;
 
-namespace Integration.Tests.Common;
+namespace Integration_Test.Common;
 
 public abstract class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>, IAsyncLifetime
 {
@@ -57,6 +57,7 @@ public abstract class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppF
             PermissionRegistry.AdminSettingsRolePermissionRead,
             PermissionRegistry.AdminSettingsRolePermissionEdit,
             PermissionRegistry.AdminSettingsRolePermissionDelete,
+            PermissionRegistry.PDSetupAccess
         };
     }
 

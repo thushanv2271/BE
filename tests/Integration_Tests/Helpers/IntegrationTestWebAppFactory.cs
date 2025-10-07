@@ -9,7 +9,7 @@ using Testcontainers.PostgreSql;
 using Web.Api;
 using Xunit;
 
-namespace Integration.Tests.Helpers;
+namespace Integration_Test.Helpers;
 
 public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 
-namespace Integration.Tests.Helpers;
+namespace Integration_Test.Helpers;
 
 public class TestAuthenticationSchemeOptions : AuthenticationSchemeOptions
 {
