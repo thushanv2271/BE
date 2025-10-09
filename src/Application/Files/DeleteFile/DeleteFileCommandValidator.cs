@@ -13,9 +13,13 @@ internal sealed class DeleteFileCommandValidator : AbstractValidator<DeleteFileC
 {
     public DeleteFileCommandValidator()
     {
-        RuleFor(x => x.Id)
+        RuleFor(x => x.Ids)
+            .NotNull()
+            .WithMessage("File IDs list cannot be null")
             .NotEmpty()
-            .WithMessage("File ID is required");
+            .WithMessage("At least one file ID is required")
+            .Must(ids => ids.All(id => id != Guid.Empty))
+            .WithMessage("All file IDs must be valid (non-empty GUIDs)");
 
         RuleFor(x => x.DeletedBy)
             .NotEmpty()

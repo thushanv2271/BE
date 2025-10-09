@@ -7,9 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace Integration_Test.Files;
 public class DeleteFileEndpointsTests : BaseIntegrationTest
@@ -44,24 +46,30 @@ public class DeleteFileEndpointsTests : BaseIntegrationTest
         await DbContext.SaveChangesAsync();
 
         // Act
-        HttpResponseMessage response = await HttpClient.DeleteAsync($"{BaseUrl}/{testFile.Id}");
+        var requestBody = new { Ids = new List<Guid> { testFile.Id } };
+        var request = new HttpRequestMessage(HttpMethod.Delete, BaseUrl)
+        {
+            Content = JsonContent.Create(requestBody)
+        };
+
+        HttpResponseMessage response = await HttpClient.SendAsync(request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<DeleteFileResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<DeleteFilesResponseDto>();
         result.Should().NotBeNull();
-        result!.Data.Should().NotBeNull();
-        result.Data.Id.Should().Be(testFile.Id);
-        result.Data.OriginalFileName.Should().Be("test-document.xlsx");
-        result.Data.StoredFileName.Should().Be("test-document_20250107_120000.xlsx");
-        result.Data.Size.Should().Be(1024);
-        result.Data.DeletedBy.Should().Be(TestUserId);
-        result.Data.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
+        result!.Data.Should().HaveCount(1);
+        var deleted = result.Data.First();
+        deleted.Id.Should().Be(testFile.Id);
+        deleted.OriginalFileName.Should().Be("test-document.xlsx");
+        deleted.StoredFileName.Should().Be("test-document_20250107_120000.xlsx");
+        deleted.Size.Should().Be(1024);
+        deleted.DeletedBy.Should().Be(TestUserId);
+        deleted.DeletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
 
         // Verify file is deleted from database
-        var deletedFile = await DbContext.UploadedFiles
-            .FirstOrDefaultAsync(f => f.Id == testFile.Id);
+        var deletedFile = await DbContext.UploadedFiles.FirstOrDefaultAsync(f => f.Id == testFile.Id);
         deletedFile.Should().BeNull();
     }
 
@@ -71,8 +79,14 @@ public class DeleteFileEndpointsTests : BaseIntegrationTest
         // Arrange
         var nonExistentFileId = Guid.NewGuid();
 
+        var requestBody = new { Ids = new List<Guid> { nonExistentFileId } };
+        var request = new HttpRequestMessage(HttpMethod.Delete, BaseUrl)
+        {
+            Content = JsonContent.Create(requestBody)
+        };
+
         // Act
-        HttpResponseMessage response = await HttpClient.DeleteAsync($"{BaseUrl}/{nonExistentFileId}");
+        HttpResponseMessage response = await HttpClient.SendAsync(request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -101,8 +115,14 @@ public class DeleteFileEndpointsTests : BaseIntegrationTest
         // Remove authentication
         await AuthenticateAsUserWithoutPermissionsAsync();
 
+        var requestBody = new { Ids = new List<Guid> { testFile.Id } };
+        var request = new HttpRequestMessage(HttpMethod.Delete, BaseUrl)
+        {
+            Content = JsonContent.Create(requestBody)
+        };
+
         // Act
-        HttpResponseMessage response = await HttpClient.DeleteAsync($"{BaseUrl}/{testFile.Id}");
+        HttpResponseMessage response = await HttpClient.SendAsync(request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -154,8 +174,14 @@ public class DeleteFileEndpointsTests : BaseIntegrationTest
         DbContext.UploadedFiles.AddRange(file1, file2, file3);
         await DbContext.SaveChangesAsync();
 
-        // Act - Delete file2
-        HttpResponseMessage response = await HttpClient.DeleteAsync($"{BaseUrl}/{file2.Id}");
+        var requestBody = new { Ids = new List<Guid> { file2.Id } };
+        var request = new HttpRequestMessage(HttpMethod.Delete, BaseUrl)
+        {
+            Content = JsonContent.Create(requestBody)
+        };
+
+        // Act
+        HttpResponseMessage response = await HttpClient.SendAsync(request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -165,16 +191,6 @@ public class DeleteFileEndpointsTests : BaseIntegrationTest
         remainingFiles.Should().Contain(f => f.Id == file1.Id);
         remainingFiles.Should().Contain(f => f.Id == file3.Id);
         remainingFiles.Should().NotContain(f => f.Id == file2.Id);
-    }
-
-    [Fact]
-    public async Task DeleteFile_ShouldHandleInvalidGuidFormat()
-    {
-        // Act
-        HttpResponseMessage response = await HttpClient.DeleteAsync($"{BaseUrl}/invalid-guid");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -197,15 +213,19 @@ public class DeleteFileEndpointsTests : BaseIntegrationTest
         DbContext.UploadedFiles.Add(testFile);
         await DbContext.SaveChangesAsync();
 
+        var requestBody = new { Ids = new List<Guid> { testFile.Id } };
+        var request = new HttpRequestMessage(HttpMethod.Delete, BaseUrl)
+        {
+            Content = JsonContent.Create(requestBody)
+        };
+
         // Act
-        HttpResponseMessage response = await HttpClient.DeleteAsync($"{BaseUrl}/{testFile.Id}");
+        HttpResponseMessage response = await HttpClient.SendAsync(request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        // Verify metadata is still deleted
-        var deletedFile = await DbContext.UploadedFiles
-            .FirstOrDefaultAsync(f => f.Id == testFile.Id);
+        var deletedFile = await DbContext.UploadedFiles.FirstOrDefaultAsync(f => f.Id == testFile.Id);
         deletedFile.Should().BeNull();
     }
 
@@ -229,27 +249,32 @@ public class DeleteFileEndpointsTests : BaseIntegrationTest
         DbContext.UploadedFiles.Add(testFile);
         await DbContext.SaveChangesAsync();
 
+        var requestBody = new { Ids = new List<Guid> { testFile.Id } };
+        var request = new HttpRequestMessage(HttpMethod.Delete, BaseUrl)
+        {
+            Content = JsonContent.Create(requestBody)
+        };
+
         // Act
-        HttpResponseMessage response = await HttpClient.DeleteAsync($"{BaseUrl}/{testFile.Id}");
+        HttpResponseMessage response = await HttpClient.SendAsync(request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var result = await response.Content.ReadFromJsonAsync<DeleteFileResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<DeleteFilesResponseDto>();
         result.Should().NotBeNull();
         result!.Message.Should().Be("File deleted successfully");
-        result.Data.Should().NotBeNull();
-        result.Data.Id.Should().Be(testFile.Id);
-        result.Data.PhysicalPath.Should().Be("/uploads/structure-test.csv");
+        result.Data.Should().ContainSingle();
+        result.Data.First().PhysicalPath.Should().Be("/uploads/structure-test.csv");
     }
 
     #endregion
 
     #region Response DTOs
 
-    private record DeleteFileResponseDto(
+    private record DeleteFilesResponseDto(
         string Message,
-        DeleteFileData Data);
+        List<DeleteFileData> Data);
 
     private record DeleteFileData(
         Guid Id,

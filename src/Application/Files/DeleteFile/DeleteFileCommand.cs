@@ -12,6 +12,6 @@ namespace Application.Files.DeleteFile;
 /// <param name="Id">The unique identifier of the file to delete.</param>
 /// <param name="DeletedBy">The unique identifier of the user requesting the deletion.</param>
 public sealed record DeleteFileCommand(
-    Guid Id,
+    List<Guid> Ids,
     Guid DeletedBy
-) : ICommand<DeleteFileResponse>;
+) : ICommand<List<DeleteFileResponse>>;

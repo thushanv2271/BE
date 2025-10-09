@@ -4,6 +4,7 @@ using Domain.EfaConfigs;
 using Domain.Exports;
 using Domain.Files;
 using Domain.MasterData;
+using Domain.Organizations;
 using Domain.PasswordResetTokens;
 using Domain.PDTempData;
 using Domain.Permissions;
@@ -45,7 +46,7 @@ public sealed class ApplicationDbContext(
     public DbSet<UploadedFile> UploadedFiles { get; set; } = null!;
 
     public DbSet<EfaConfiguration> EfaConfigurations { get; set; }
-
+    public DbSet<Organization> Organizations { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);

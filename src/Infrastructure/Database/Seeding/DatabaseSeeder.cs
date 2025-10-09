@@ -12,6 +12,7 @@ using SharedKernel;
 using Application.Abstractions.Authentication;
 using OfficeOpenXml;
 using Microsoft.Extensions.Configuration;
+using Domain.Organizations;
 
 namespace Infrastructure.Database.Seeding;
 
@@ -32,6 +33,7 @@ public sealed class DatabaseSeeder(
         await SeedPermissionsAsync(cancellationToken);
         await SeedAdministratorRoleAndUserAsync(cancellationToken);
         await SeedSegmentMasterAsync(cancellationToken);
+        await SeedOrganizationsAsync(cancellationToken);
 
         logger.LogInformation("Database seeding completed successfully.");
     }
@@ -203,5 +205,51 @@ public sealed class DatabaseSeeder(
         await context.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Seeded {Count} SegmentMaster records.", entities.Count);
+    }
+
+    //Seed Organizations Data  
+    private async Task SeedOrganizationsAsync(CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Seeding Organizations data...");
+
+        bool hasOrganizations = await context.Organizations.AnyAsync(cancellationToken);
+        if (hasOrganizations)
+        {
+            logger.LogInformation("Organizations data already exists, skipping seeding.");
+            return;
+        }
+
+        var organizations = new List<Organization>
+        {
+            new Organization
+            {
+                Id = Guid.CreateVersion7(),
+                Name = "Azend Technologies",
+                Code = "AZEND",
+                Email = "info@azendtech.com",
+                ContactNumber = "+94 71 234 5678",
+                Address = "Colombo, Sri Lanka",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            },
+            new Organization
+            {
+                Id = Guid.CreateVersion7(),
+                Name = "Cora Analytics",
+                Code = "CORA",
+                Email = "contact@cora.com",
+                ContactNumber = "+44 20 7946 1234",
+                Address = "London, UK",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }
+        };
+
+        context.Organizations.AddRange(organizations);
+        await context.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Seeded {Count} Organizations.", organizations.Count);
     }
 }

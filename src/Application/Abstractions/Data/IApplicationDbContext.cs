@@ -3,6 +3,7 @@ using Domain.EfaConfigs;
 using Domain.Exports;
 using Domain.Files;
 using Domain.MasterData;
+using Domain.Organizations;
 using Domain.PasswordResetTokens;
 using Domain.PDTempData;
 using Domain.Permissions;
@@ -39,6 +40,8 @@ public interface IApplicationDbContext
     DbSet<UploadedFile> UploadedFiles { get; }
 
     DbSet<EfaConfiguration> EfaConfigurations { get; }
+
+    DbSet<Organization> Organizations { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
