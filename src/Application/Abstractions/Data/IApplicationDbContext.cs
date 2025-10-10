@@ -1,4 +1,5 @@
 ﻿using Domain.Authentication;
+using Domain.Branches;
 using Domain.EfaConfigs;
 using Domain.Exports;
 using Domain.Files;
@@ -42,6 +43,7 @@ public interface IApplicationDbContext
     DbSet<EfaConfiguration> EfaConfigurations { get; }
 
     DbSet<Organization> Organizations { get; }
+    DbSet<Branch> Branches { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

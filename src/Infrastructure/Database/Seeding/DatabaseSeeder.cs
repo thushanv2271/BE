@@ -1,18 +1,19 @@
-using Application.Abstractions.Data;
-using Domain.Permissions;
-using Domain.Roles;
-using Domain.RolePermissions;
-using Domain.Users;
-using Domain.UserRoles;
-using Domain.MasterData;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Infrastructure.Authentication;
-using SharedKernel;
 using Application.Abstractions.Authentication;
-using OfficeOpenXml;
-using Microsoft.Extensions.Configuration;
+using Application.Abstractions.Data;
+using Domain.Branches;
+using Domain.MasterData;
 using Domain.Organizations;
+using Domain.Permissions;
+using Domain.RolePermissions;
+using Domain.Roles;
+using Domain.UserRoles;
+using Domain.Users;
+using Infrastructure.Authentication;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using OfficeOpenXml;
+using SharedKernel;
 
 namespace Infrastructure.Database.Seeding;
 
@@ -34,6 +35,7 @@ public sealed class DatabaseSeeder(
         await SeedAdministratorRoleAndUserAsync(cancellationToken);
         await SeedSegmentMasterAsync(cancellationToken);
         await SeedOrganizationsAsync(cancellationToken);
+        await SeedBranchesAsync(cancellationToken);
 
         logger.LogInformation("Database seeding completed successfully.");
     }
@@ -251,5 +253,63 @@ public sealed class DatabaseSeeder(
         await context.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Seeded {Count} Organizations.", organizations.Count);
+    }
+
+    //Seed Branches Data  
+    private async Task SeedBranchesAsync(CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Seeding Branches data...");
+
+        bool hasBranches = await context.Branches.AnyAsync(cancellationToken);
+        if (hasBranches)
+        {
+            logger.LogInformation("Branches data already exists, skipping seeding.");
+            return;
+        }
+
+        // Get Azend Technologies organization
+        Organization? azendOrg = await context.Organizations
+            .FirstOrDefaultAsync(o => o.Code == "AZEND", cancellationToken);
+
+        if (azendOrg == null)
+        {
+            logger.LogWarning("Azend Technologies organization not found. Skipping branch seeding.");
+            return;
+        }
+
+        var branches = new List<Branch>
+    {
+        new Branch
+        {
+            Id = Guid.CreateVersion7(),
+            OrganizationId = azendOrg.Id,
+            BranchName = "Colombo Main Branch",
+            BranchCode = "CMB001",
+            Email = "colombo@azendtech.com",
+            ContactNumber = "+94 11 222 3344",
+            Address = "No. 45, Galle Road, Colombo",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        },
+        new Branch
+        {
+            Id = Guid.CreateVersion7(),
+            OrganizationId = azendOrg.Id,
+            BranchName = "Kandy Branch",
+            BranchCode = "KDY002",
+            Email = "kandy@azendtech.com",
+            ContactNumber = "+94 81 223 4455",
+            Address = "Peradeniya Road, Kandy",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        }
+    };
+
+        context.Branches.AddRange(branches);
+        await context.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Seeded {Count} Branches.", branches.Count);
     }
 }

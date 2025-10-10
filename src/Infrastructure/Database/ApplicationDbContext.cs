@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Data;
 using Domain.Authentication;
+using Domain.Branches;
 using Domain.EfaConfigs;
 using Domain.Exports;
 using Domain.Files;
@@ -47,6 +48,7 @@ public sealed class ApplicationDbContext(
 
     public DbSet<EfaConfiguration> EfaConfigurations { get; set; }
     public DbSet<Organization> Organizations { get; set; }
+    public DbSet<Branch> Branches { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
